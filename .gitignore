@@ -1,0 +1,9 @@
+node_modules/
+npm-debug.log*
+
+# Cloned at `make setup` time, pinned to a tag — see README.
+vendor/
+
+.env
+.DS_Store
+*.log

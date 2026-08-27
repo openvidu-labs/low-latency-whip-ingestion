@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Publish · low-latency-whip-ingestion</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <header><a href="/">&larr; low-latency-whip-ingestion</a></header>
+  <main>
+    <h1>Publish from your webcam</h1>
+    <p class="lede">
+      This page never talks to OpenVidu's LiveKit-compatible signaling protocol. It only asks
+      the backend for a WHIP ingress (a URL + a bearer token), then speaks plain WHIP directly
+      to OpenVidu over HTTP -- the same thing OBS or ffmpeg would do.
+    </p>
+
+    <div class="card">
+      <video id="preview" autoplay playsinline muted></video>
+      <p class="status" id="status">Idle.</p>
+      <button id="start">Start publishing</button>
+      <button id="stop" class="secondary" disabled>Stop</button>
+    </div>
+
+    <p><a href="/watch.html">Open the viewer in another tab &rarr;</a> to see it arrive.</p>
+  </main>
+
+  <script type="module">
+    import { WHIPClient } from '/whip-client.js';
+
+    const preview = document.getElementById('preview');
+    const status = document.getElementById('status');
+    const startBtn = document.getElementById('start');
+    const stopBtn = document.getElementById('stop');
+
+    let stream = null;
+    let whip = null;
+
+    function setStatus(text, kind = '') {
+      status.textContent = text;
+      status.className = `status ${kind}`;
+    }
+
+    startBtn.addEventListener('click', async () => {
+      startBtn.disabled = true;
+      try {
+        setStatus('Requesting camera and microphone…');
+        stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        preview.srcObject = stream;
+
+        setStatus('Requesting a WHIP ingress from the backend…');
+        const res = await fetch('/api/ingress', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ identity: `browser-${Date.now()}` }),
+        });
+        if (!res.ok) throw new Error((await res.json()).error || res.statusText);
+        const ingress = await res.json();
+
+        setStatus(`Publishing over WHIP to ${ingress.url} …`);
+        whip = new WHIPClient(ingress.url, ingress.streamKey);
+        await whip.publish(stream);
+
+        setStatus(`Live as "${ingress.participantIdentity}" in room "${ingress.roomName}".`, 'ok');
+        stopBtn.disabled = false;
+      } catch (err) {
+        console.error(err);
+        setStatus(`Failed: ${err.message}`, 'err');
+        startBtn.disabled = false;
+        stream?.getTracks().forEach((t) => t.stop());
+      }
+    });
+
+    stopBtn.addEventListener('click', async () => {
+      stopBtn.disabled = true;
+      await whip?.stop();
+      stream?.getTracks().forEach((t) => t.stop());
+      preview.srcObject = null;
+      setStatus('Stopped.');
+      startBtn.disabled = false;
+    });
+  </script>
+</body>
+</html>

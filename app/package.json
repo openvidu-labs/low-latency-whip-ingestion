@@ -1,0 +1,17 @@
+{
+  "name": "low-latency-whip-ingestion-app",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Demo app: publish a webcam (or OBS) into an OpenVidu Room over WHIP, and watch it live.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^5.2.1",
+    "livekit-client": "^2.22.1",
+    "livekit-server-sdk": "^2.18.0"
+  }
+}

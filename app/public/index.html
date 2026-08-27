@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>low-latency-whip-ingestion</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <header>
+    <h1>low-latency-whip-ingestion</h1>
+  </header>
+  <main>
+    <p class="lede">
+      A companion demo for the OpenVidu
+      <a href="https://openvidu.io/blog/" target="_blank">blog</a>'s Low Latency Live Streaming
+      series: push a live stream into an OpenVidu Room over
+      <a href="https://datatracker.ietf.org/doc/rfc9725/" target="_blank">WHIP</a> and watch it come out the other
+      side, sub-second, end to end.
+    </p>
+
+    <div class="card-links">
+      <a class="card-link" href="/publish.html">
+        <div class="emoji">📷</div>
+        <h2>Publish from your webcam</h2>
+        <p>A browser page that captures your camera and mic, and publishes them straight to
+        OpenVidu over WHIP -- no plugin, no separate encoder.</p>
+      </a>
+      <a class="card-link" href="/watch.html">
+        <div class="emoji">📺</div>
+        <h2>Watch the stream</h2>
+        <p>Joins the room as a subscriber and renders whatever is currently being published,
+        from either the browser publisher or OBS.</p>
+      </a>
+    </div>
+
+    <div class="card">
+      <h2>🎥 Publish with OBS instead</h2>
+      <p>
+        OBS Studio has had a built-in WHIP output since version 30. Generate a one-time set of
+        credentials below, then paste them into
+        <strong>Settings &rarr; Stream &rarr; Service: WHIP</strong>. Full walkthrough in the
+        <a href="https://github.com/openvidu-labs/low-latency-whip-ingestion#publish-with-obs" target="_blank">README</a>.
+      </p>
+      <button id="generate">Generate WHIP credentials</button>
+      <div id="result" style="display:none">
+        <p class="field-label">Server</p>
+        <pre id="obs-url"></pre>
+        <p class="field-label">Bearer Token</p>
+        <pre id="obs-token"></pre>
+      </div>
+      <p id="status" class="status"></p>
+    </div>
+  </main>
+
+  <script type="module">
+    const btn = document.getElementById('generate');
+    const status = document.getElementById('status');
+    const result = document.getElementById('result');
+
+    btn.addEventListener('click', async () => {
+      btn.disabled = true;
+      status.textContent = 'Requesting an ingress from OpenVidu…';
+      status.className = 'status';
+      try {
+        const res = await fetch('/api/ingress', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ identity: `obs-${Date.now()}` }),
+        });
+        if (!res.ok) throw new Error((await res.json()).error || res.statusText);
+        const ingress = await res.json();
+
+        document.getElementById('obs-url').textContent = ingress.url;
+        document.getElementById('obs-token').textContent = ingress.streamKey;
+        result.style.display = 'block';
+        status.textContent = `Ready. Publishing as "${ingress.participantIdentity}" in room "${ingress.roomName}".`;
+        status.className = 'status ok';
+      } catch (err) {
+        status.textContent = `Failed: ${err.message}`;
+        status.className = 'status err';
+      } finally {
+        btn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>

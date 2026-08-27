@@ -1,0 +1,26 @@
+services:
+  app:
+    build: ./app
+    container_name: llwi-app
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      PORT: 3000
+      ROOM_NAME: demo-room
+      # Match community/.env in the OpenVidu Local Deployment stack (vendor/openvidu-local-deployment).
+      LIVEKIT_API_KEY: devkey
+      LIVEKIT_API_SECRET: secret
+      # Reached from inside the "openvidu-community" Docker network (see `networks:` below).
+      LIVEKIT_INTERNAL_URL: http://openvidu:7880
+      # Handed back to the browser, which runs on the host.
+      LIVEKIT_PUBLIC_URL: ws://localhost:7880
+
+# The OpenVidu Local Deployment stack (see README -> "1. Start OpenVidu") creates this network
+# under that exact name. Joining it here, rather than merging compose files, keeps the two
+# stacks independently startable/stoppable, closer to how you'd add ingestion to an OpenVidu
+# deployment you don't otherwise control.
+networks:
+  default:
+    name: openvidu-community
+    external: true

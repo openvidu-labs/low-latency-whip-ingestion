@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Watch · low-latency-whip-ingestion</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <header><a href="/">&larr; low-latency-whip-ingestion</a></header>
+  <main>
+    <h1>Watch the live stream</h1>
+    <p class="lede">
+      Joins the room as a subscribe-only participant over OpenVidu's LiveKit-compatible signaling
+      and renders whatever is being published right now, whether that's the browser publisher,
+      OBS, or ffmpeg.
+    </p>
+
+    <div class="card">
+      <video id="remote-video" autoplay playsinline></video>
+      <p class="status" id="status">Connecting…</p>
+    </div>
+  </main>
+
+  <script type="module">
+    import { Room, RoomEvent } from '/vendor/livekit-client/livekit-client.esm.mjs';
+
+    const video = document.getElementById('remote-video');
+    const status = document.getElementById('status');
+
+    function setStatus(text, kind = '') {
+      status.textContent = text;
+      status.className = `status ${kind}`;
+    }
+
+    async function main() {
+      const res = await fetch(`/api/viewer-token?identity=viewer-${Date.now()}`);
+      if (!res.ok) throw new Error((await res.json()).error || res.statusText);
+      const { token, url, roomName } = await res.json();
+
+      const room = new Room();
+
+      room.on(RoomEvent.TrackSubscribed, (track) => {
+        if (track.kind === 'video') {
+          track.attach(video);
+          setStatus(`Watching room "${roomName}".`, 'ok');
+        }
+      });
+
+      room.on(RoomEvent.Disconnected, () => setStatus('Disconnected.', 'err'));
+
+      setStatus(`Connecting to ${url} …`);
+      await room.connect(url, token);
+      setStatus(`Connected. Waiting for a publisher in "${roomName}" …`);
+    }
+
+    main().catch((err) => {
+      console.error(err);
+      setStatus(`Failed: ${err.message}`, 'err');
+    });
+  </script>
+</body>
+</html>
