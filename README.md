@@ -85,6 +85,8 @@ Open both in separate tabs (or separate browsers) to see the whole loop.
 
 ## Publish with OBS
 
+**Linux note:** WHIP output is not available in the Ubuntu 24.04 PPA build of OBS. Use the [Flatpak build](https://flathub.org/apps/com.obsproject.Studio) instead if `WHIP` doesn't show up under Service.
+
 WHIP has been a built-in OBS output since version 30. You need a WHIP URL and a bearer token — the app generates both for you:
 
 1. With the app running, either:
@@ -99,8 +101,6 @@ WHIP has been a built-in OBS output since version 30. You need a WHIP URL and a 
 5. Open [http://localhost:3000/watch.html](http://localhost:3000/watch.html) — your OBS scene should appear.
 
 > Each set of credentials is single-use per ingress. If you stop and restart streaming in OBS, generate a fresh set first — the old ingress isn't reused.
-
-**Linux note:** WHIP output is not available in the Ubuntu 24.04 PPA build of OBS. Use the [Flatpak build](https://flathub.org/apps/com.obsproject.Studio) instead if `WHIP` doesn't show up under Service.
 
 ## How it works
 
