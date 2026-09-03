@@ -57,7 +57,7 @@ docker compose up -d
 cd -
 ```
 
-Wait for the `🎉 OpenVidu is ready! 🎉` banner in the logs (`docker compose -f vendor/openvidu-local-deployment/community/docker-compose.yaml logs -f openvidu`) before continuing — the stack is 11 containers and the first boot pulls several images.
+Wait for the `🎉 OpenVidu is ready! 🎉` banner in the logs (`docker compose -f vendor/openvidu-local-deployment/community/docker-compose.yaml logs -f ready-check` — the banner comes from the `ready-check` container, not from `openvidu`) before continuing — the stack is 11 containers and the first boot pulls several images.
 
 No `make`? The two commands `setup` runs are just:
 

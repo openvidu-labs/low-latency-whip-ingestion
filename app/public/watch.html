@@ -39,19 +39,30 @@
       const { token, url, roomName } = await res.json();
 
       const room = new Room();
+      // A stream that is already live arrives *during* connect(), so the "waiting" status below
+      // must not overwrite it -- which is exactly what it used to do: video playing, and a page
+      // still claiming it was waiting for a publisher.
+      let receiving = false;
 
-      room.on(RoomEvent.TrackSubscribed, (track) => {
-        if (track.kind === 'video') {
-          track.attach(video);
-          setStatus(`Watching room "${roomName}".`, 'ok');
-        }
+      room.on(RoomEvent.TrackSubscribed, (track, publication, participant) => {
+        if (track.kind !== 'video') return;
+        track.attach(video);
+        receiving = true;
+        setStatus(`Receiving "${participant.identity}" in room "${roomName}".`, 'ok');
+      });
+
+      room.on(RoomEvent.TrackUnsubscribed, (track) => {
+        if (track.kind !== 'video') return;
+        track.detach(video);
+        receiving = false;
+        setStatus(`The publisher stopped. Waiting for the next one in "${roomName}" …`);
       });
 
       room.on(RoomEvent.Disconnected, () => setStatus('Disconnected.', 'err'));
 
       setStatus(`Connecting to ${url} …`);
       await room.connect(url, token);
-      setStatus(`Connected. Waiting for a publisher in "${roomName}" …`);
+      if (!receiving) setStatus(`Connected. Waiting for a publisher in "${roomName}" …`);
     }
 
     main().catch((err) => {
