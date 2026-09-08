@@ -32,11 +32,8 @@ OpenVidu Platform is a self-hosted, [LiveKit](https://livekit.io/)-compatible se
 
 ## Prerequisites
 
-- **Docker**, and **Docker Compose v2.24 or newer** — `docker compose version`. The OpenVidu stack is
-  started straight from GitHub below, and Compose only learned to read a compose file out of a git
-  repository in 2.24 (tested here on v5.5.1). On an older Compose, see
-  [Starting OpenVidu from a clone](#starting-openvidu-from-a-clone).
-- **Git** — Compose uses it to fetch that remote compose file, and you need it to clone this repo.
+- **Docker** and **Docker Compose v2** — `docker compose version`.
+- **Git**.
 - A webcam and microphone, for the browser-publisher path.
 - [OBS Studio](https://obsproject.com/) 30.0+, for the OBS path (optional).
 
@@ -53,76 +50,38 @@ cd low-latency-whip-ingestion
 
 This app doesn't bundle OpenVidu — it joins the network of a real
 [OpenVidu Local Deployment](https://openvidu.io/latest/docs/self-hosting/local/), exactly as you'd
-add ingestion to an OpenVidu install you don't otherwise control. You don't have to clone that
-deployment either: Compose can read its compose file straight out of GitHub, and the only file you
-need locally is the deployment's own `.env`.
-
-**Linux / macOS:**
+add ingestion to an OpenVidu install you don't otherwise control. Clone that deployment, run its
+configure script once, and start it:
 
 ```bash
-# 1. The deployment's defaults: API keys, passwords, ports. One file, no clone.
-curl -fsSL -o openvidu.env \
-  https://raw.githubusercontent.com/OpenVidu/openvidu-local-deployment/3.8.0/community/.env
-
-# 2. Put them in the environment, and fill in the one value the deployment's setup script
-#    would have detected for you: your machine's LAN address.
-set -a
-. ./openvidu.env
-LAN_PRIVATE_IP=$(ip route get 8.8.8.8 | sed -n 's/.*src \([^ ]*\).*/\1/p')   # Linux
-# LAN_PRIVATE_IP=$(ipconfig getifaddr en0)                                    # macOS (Wi-Fi)
-set +a
-
-# 3. Up, with the compose file fetched from the tag this repo was tested against.
-docker compose -p openvidu \
-  -f "https://github.com/OpenVidu/openvidu-local-deployment.git#3.8.0:community" \
-  up -d
+git clone -b 3.8.0 https://github.com/OpenVidu/openvidu-local-deployment vendor/openvidu-local-deployment
+cd vendor/openvidu-local-deployment/community
+./configure_lan_private_ip_linux.sh    # macOS: ./configure_lan_private_ip_macos.sh
+docker compose up -d
+cd -
 ```
 
-**Windows (PowerShell):**
+On Windows, run `.\configure_lan_private_ip_windows.bat` from PowerShell instead of the `.sh`
+script; everything else is the same.
 
-```powershell
-curl.exe -fsSL -o openvidu.env `
-  https://raw.githubusercontent.com/OpenVidu/openvidu-local-deployment/3.8.0/community/.env
+Two notes:
 
-Get-Content openvidu.env | Where-Object { $_ -match '^[A-Z]' } | ForEach-Object {
-  $name, $value = $_ -split '=', 2
-  [Environment]::SetEnvironmentVariable($name, $value, 'Process')
-}
-$env:LAN_PRIVATE_IP = (Get-NetIPConfiguration |
-  Where-Object { $_.IPv4DefaultGateway }).IPv4Address.IPAddress
+- **`vendor/` is gitignored here**, so the clone doesn't show up as untracked files in this repo.
+  Clone it anywhere you like — nothing in this app points at that directory.
+- **The configure script writes one line**: your machine's LAN address into the deployment's `.env`,
+  as `LAN_PRIVATE_IP`. That is the address the media server announces itself as, which is why the
+  deployment ships it empty and detects it per machine. If media negotiates and then never arrives,
+  that value is the first thing to check.
 
-docker compose -p openvidu `
-  -f "https://github.com/OpenVidu/openvidu-local-deployment.git#3.8.0:community" `
-  up -d
-```
-
-Because the compose file comes from a remote source, Compose lists every variable it resolved and
-asks you to confirm before it runs anything. Read it and answer `Y` — or add `-y` to the command in
-a script.
-
-Three things about that recipe, since none of them are obvious:
-
-- **`set -a` is doing the work**, not `--env-file`. With a remote compose file the project directory
-  is Compose's own cache of the repository, and `--env-file` is resolved against *that*, so a local
-  env file passed with the flag is silently ignored. Variables exported into the shell are read
-  whatever the project directory is.
-- **`LAN_PRIVATE_IP` is not optional.** The deployment ships it empty and its
-  `configure_lan_private_ip_*` script fills it in; that script is the only thing you are replacing
-  by hand here. It is what the media server announces itself as, so getting it wrong shows up as a
-  connection that negotiates and then carries no media.
-- **`-p openvidu` names the project**, so the stack is one `docker compose -p openvidu … down` later
-  rather than eleven `docker rm`s.
-
-Then wait for the ready banner before you carry on — the stack is eleven containers, and a first
-boot pulls several GB of images:
+Now wait for the ready banner — the stack is eleven containers, and a first boot pulls several GB of
+images:
 
 ```bash
 docker logs -f ready-check
 ```
 
-It prints `🎉 OpenVidu 3.8.0 is ready! 🎉` when the whole stack is up. (Plain `docker logs`, not
-`docker compose logs`: the container name is fixed, and this way you don't need the remote compose
-file again just to read a log.)
+It prints `🎉 OpenVidu 3.8.0 is ready! 🎉` when everything is up. (The banner comes from the
+`ready-check` container, not from `openvidu`.)
 
 ### 3. Start the app
 
@@ -210,8 +169,38 @@ The app, from this repo:
 docker compose down
 ```
 
-And the OpenVidu stack — the same remote compose file, and the same variables, since Compose reads
-the file again to know what it is tearing down:
+And the OpenVidu stack, from where you cloned it:
+
+```bash
+cd vendor/openvidu-local-deployment/community && docker compose down && cd -
+```
+
+Add `-v` to that last one to drop the stack's volumes too (recordings, MinIO and Mongo data).
+
+## Alternative: start OpenVidu without cloning it
+
+If you'd rather not have a second checkout on disk, Compose can read the deployment's compose file
+straight out of GitHub. It needs **Compose 2.24 or newer** (tested on v5.5.1) and it is fiddlier than
+the clone above, so it is here rather than in the Quickstart:
+
+```bash
+# The deployment's defaults — API keys, passwords, ports. One file, no clone.
+curl -fsSL -o openvidu.env \
+  https://raw.githubusercontent.com/OpenVidu/openvidu-local-deployment/3.8.0/community/.env
+
+# Export them, and fill in the value the configure script would have detected.
+set -a
+. ./openvidu.env
+LAN_PRIVATE_IP=$(ip route get 8.8.8.8 | sed -n 's/.*src \([^ ]*\).*/\1/p')   # macOS: $(ipconfig getifaddr en0)
+set +a
+
+docker compose -p openvidu \
+  -f "https://github.com/OpenVidu/openvidu-local-deployment.git#3.8.0:community" \
+  up -d          # add -y to skip the confirmation prompt
+```
+
+Stopping it takes the same file and the same variables, since Compose reads the file again to know
+what it is tearing down:
 
 ```bash
 set -a; . ./openvidu.env; set +a
@@ -220,23 +209,20 @@ docker compose -p openvidu \
   down
 ```
 
-Add `-v` to that last command to drop the stack's volumes too (recordings, MinIO and Mongo data).
+Three things about it that are not guessable:
 
-## Starting OpenVidu from a clone
+- **`set -a` is what makes the variables reach Compose**, not `--env-file`. With a remote compose
+  file the project directory is Compose's own cache of the repository, so `--env-file` is resolved
+  against *that* and a local env file is silently ignored — every variable comes back unset.
+- **`LAN_PRIVATE_IP` has to be set by hand**, because the configure script you skipped is the thing
+  that normally sets it.
+- **Compose asks for confirmation** when the compose file is remote, listing every variable it
+  resolved. `-y` skips it on `up`; `down` takes no such flag and doesn't ask.
 
-The remote compose file needs Compose 2.24+. On an older one, or if you'd rather have the
-deployment's files in front of you, clone it and use the documented flow — it is the same stack,
-and this app doesn't care which way it was started:
-
-```bash
-git clone -b 3.8.0 https://github.com/OpenVidu/openvidu-local-deployment
-cd openvidu-local-deployment/community
-./configure_lan_private_ip_linux.sh    # or _macos.sh, or .bat on Windows
-docker compose up -d
-cd -
-```
-
-Stopping it is `docker compose down` from that same directory.
+Plain HTTPS doesn't work, in case you were about to try it: `docker compose -f https://…/compose.yaml`
+treats the URL as a local path. The `.git#tag:subdir` form above is a different mechanism — Compose
+fetches the repository, which is also what makes the stack's sibling files
+(`livekit.yaml`, `ingress.yaml`, `meet.env`, …) available to it.
 
 ## License
 

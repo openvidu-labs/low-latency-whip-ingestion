@@ -1,7 +1,7 @@
 node_modules/
 npm-debug.log*
 
-# Cloned at `make setup` time, pinned to a tag — see README.
+# The OpenVidu Local Deployment clone — see README, "2. Start OpenVidu".
 vendor/
 
 .env
