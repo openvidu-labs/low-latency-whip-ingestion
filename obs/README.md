@@ -1,26 +1,29 @@
-# OBS scene collection
+# OBS scene collections
 
-`openvidu-whip-webcam.json` is an OBS **scene collection**: a webcam filling a 1280×720 canvas, a
-solid backdrop behind it, and your default microphone. Import it and the only thing left to fill in
-is the WHIP URL and token from the app.
+One scene collection per operating system: a webcam filling a 1280×720 canvas and your default
+microphone. Import the one for your machine and the only thing left to fill in is the WHIP URL and
+token from the app.
 
-It was built against the collection format OBS Studio **32.2.2** saves, and needs OBS **30.0+** for
-the WHIP output itself.
+| Your OS | File | Camera source | Microphone |
+|---|---|---|---|
+| Linux | `openvidu-whip-webcam-linux.json` | `v4l2_input`, device `/dev/video0` | PulseAudio |
+| macOS | `openvidu-whip-webcam-macos.json` | `av_capture_input` | CoreAudio |
+| Windows | `openvidu-whip-webcam-windows.json` | `dshow_input` | WASAPI |
+
+They are separate files because a capture source's internal id is platform-specific, so one
+collection cannot work everywhere — and choosing your own file beats importing three scenes and
+deleting two.
+
+Built against the collection format OBS Studio **32.2.2** saves; the WHIP output itself needs OBS
+**30.0+**.
 
 ## Import it
 
-**Scene Collection → Import**, pick this file, then **Scene Collection → OpenVidu WHIP ingest**.
+**Scene Collection → Import**, pick your file, then **Scene Collection → OpenVidu WHIP ingest**.
 
-There are three scenes, one per operating system:
-
-| Scene | Camera source | What to do |
-|---|---|---|
-| `WHIP webcam — Linux` | `v4l2_input`, device `/dev/video0` | Change the device in **Properties** if your webcam is not `/dev/video0` |
-| `WHIP webcam — macOS` | `av_capture_input` | Open **Properties** and pick your camera |
-| `WHIP webcam — Windows` | `dshow_input` | Open **Properties** and pick your camera |
-
-A camera source's id is platform-specific, so one scene cannot work everywhere: the two scenes for
-the other platforms will show as unavailable sources. Delete them — that is the whole cleanup.
+It gives you one scene, *WHIP webcam*, with one source in it. Open the camera's **Properties** and
+pick your device — the Linux file points at `/dev/video0`, and the macOS and Windows ones deliberately
+choose nothing, since device ids are per-machine.
 
 ## Point it at OpenVidu
 
@@ -54,11 +57,8 @@ does not change them. For a low-latency ingest:
 
 ## The background
 
-The collection ships **no filter on the camera**: what the webcam sees is what goes out. The
-*Backdrop* colour source sits behind it, so it only shows where the camera doesn't cover the canvas.
-
-If you want the background replaced, add the filter yourself — **right-click the camera → Filters →
-+**:
+There is no filter on the camera: what the webcam sees is what goes out. If you want the background
+replaced, add one yourself — **right-click the camera → Filters → +**:
 
 - **Chroma key** is built into OBS, costs almost nothing per frame, and needs a green screen behind
   you. Green with the default tolerances is usually right; *Similarity* is the dial that matters,
@@ -69,8 +69,7 @@ If you want the background replaced, add the filter yourself — **right-click t
   [obs-backgroundremoval](https://github.com/locaal-ai/obs-backgroundremoval), and on Flatpak OBS
   `flatpak install flathub com.obsproject.Studio.Plugin.BackgroundRemoval`.
 
-Either way it is a filter on the camera source, so it applies in whichever of the three scenes you
-keep.
+Whichever you add, put it on the camera source and it applies wherever that source is used.
 
 ## What this does not do
 
