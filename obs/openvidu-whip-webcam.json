@@ -90,11 +90,17 @@
             "filters": [
                 {
                     "prev_ver": 537001986,
-                    "name": "Virtual background",
+                    "name": "Chroma key",
                     "uuid": "2e525f2d-0847-4694-aef8-38200963a1ba",
-                    "id": "background_removal",
-                    "versioned_id": "background_removal",
-                    "settings": {},
+                    "id": "chroma_key_filter",
+                    "versioned_id": "chroma_key_filter",
+                    "settings": {
+                        "key_color_type": "green",
+                        "key_color": 65280,
+                        "similarity": 400,
+                        "smoothness": 80,
+                        "spill": 100
+                    },
                     "mixers": 0,
                     "sync": 0,
                     "flags": 0,
@@ -250,11 +256,17 @@
             "filters": [
                 {
                     "prev_ver": 537001986,
-                    "name": "Virtual background",
+                    "name": "Chroma key",
                     "uuid": "5f30a02d-8431-40c9-8a16-17c769368f25",
-                    "id": "background_removal",
-                    "versioned_id": "background_removal",
-                    "settings": {},
+                    "id": "chroma_key_filter",
+                    "versioned_id": "chroma_key_filter",
+                    "settings": {
+                        "key_color_type": "green",
+                        "key_color": 65280,
+                        "similarity": 400,
+                        "smoothness": 80,
+                        "spill": 100
+                    },
                     "mixers": 0,
                     "sync": 0,
                     "flags": 0,
@@ -411,11 +423,17 @@
             "filters": [
                 {
                     "prev_ver": 537001986,
-                    "name": "Virtual background",
+                    "name": "Chroma key",
                     "uuid": "2aad8518-4270-4fe9-b88e-3ebdcd45eef1",
-                    "id": "background_removal",
-                    "versioned_id": "background_removal",
-                    "settings": {},
+                    "id": "chroma_key_filter",
+                    "versioned_id": "chroma_key_filter",
+                    "settings": {
+                        "key_color_type": "green",
+                        "key_color": 65280,
+                        "similarity": 400,
+                        "smoothness": 80,
+                        "spill": 100
+                    },
                     "mixers": 0,
                     "sync": 0,
                     "flags": 0,

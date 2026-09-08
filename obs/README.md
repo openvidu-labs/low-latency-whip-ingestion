@@ -1,8 +1,8 @@
 # OBS scene collection
 
 `openvidu-whip-webcam.json` is an OBS **scene collection**: a webcam filling a 1280×720 canvas, a
-solid backdrop behind it, your default microphone, and a *Virtual background* filter on the camera.
-Import it and the only thing left to fill in is the WHIP URL and token from the app.
+solid backdrop behind it, your default microphone, and a *Chroma key* filter on the camera. Import it
+and the only thing left to fill in is the WHIP URL and token from the app.
 
 It was built against the collection format OBS Studio **32.2.2** saves, and needs OBS **30.0+** for
 the WHIP output itself.
@@ -52,36 +52,38 @@ does not change them. For a low-latency ingest:
   `zerolatency` tune if your encoder offers it. WHIP ingress runs with transcoding **off** in this
   demo, so what OBS encodes is exactly what subscribers receive.
 
-## The virtual background
+## The background
 
-The *Virtual background* filter on each camera is
-[obs-backgroundremoval](https://github.com/locaal-ai/obs-backgroundremoval) — a
-plugin, not a built-in OBS filter. Without it installed, OBS imports the collection fine and simply
-drops the filter; the camera still streams, with your real background.
+Each camera carries a **Chroma key** filter — OBS's own, no plugin to install — keyed on green, with
+OBS's default tolerances:
 
-Install it, then reopen the scene:
+| Setting | Value |
+|---|---|
+| Key colour type | Green |
+| Similarity | 400 |
+| Smoothness | 80 |
+| Colour spill reduction | 100 |
 
-```bash
-# Flatpak OBS (Linux)
-flatpak install flathub com.obsproject.Studio.Plugin.BackgroundRemoval
-```
+Put a green screen behind you and the *Backdrop* colour source underneath shows through instead.
+Without one, the filter has nothing to key on and simply leaves the picture alone, which is a
+perfectly good way to stream too — so the collection is useful either way.
 
-For a system OBS install, or on macOS and Windows, take the installer from the plugin's
-[releases page](https://github.com/locaal-ai/obs-backgroundremoval/releases).
+Tuning it, in **right-click the camera → Filters → Chroma key**:
 
-If the filter does not appear on the camera after installing the plugin, add it by hand — the
-filter's internal id has changed between plugin releases, and the one this file names
-(`background_removal`) is the long-standing one:
+- **Similarity** is the main dial: raise it until the green goes, stop before your hair does.
+- **Smoothness** softens the edge; **Colour spill reduction** takes the green tint off skin and
+  light-coloured clothing.
+- Even lighting on the screen matters more than any of these three. A shadowed fold in a cloth
+  backdrop keys as a different colour, and no setting rescues it.
 
-**Right-click the camera → Filters → + → Background Removal**.
+It costs almost nothing to run — which is the point of choosing it here, on a machine that is also
+running the whole OpenVidu stack in Docker.
 
-Two things worth knowing:
-
-- It costs CPU (or GPU, depending on the model you pick in the filter's properties). On a machine
-  that is also running the whole OpenVidu stack in Docker, drop the camera to 720p before blaming
-  WHIP for a stutter.
-- **No plugin, no problem:** OBS's built-in **Chroma Key** filter does the same job with a green
-  screen behind you, and costs almost nothing.
+**No green screen?** A model-based virtual background is a plugin away —
+[obs-backgroundremoval](https://github.com/locaal-ai/obs-backgroundremoval), and on Flatpak OBS
+`flatpak install flathub com.obsproject.Studio.Plugin.BackgroundRemoval`. Add it to the camera by
+hand once installed. It needs no green screen and costs real CPU or GPU on every frame, which is
+why it is not what this collection ships with.
 
 ## What this does not do
 

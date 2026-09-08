@@ -11,7 +11,7 @@ Everything runs locally with Docker Compose: the OpenVidu stack, this demo app, 
 │ Browser      │ ────────────────────▶ │ OpenVidu             │
 │ (webcam)     │                       │ (LiveKit-compatible) │
 └──────────────┘                       │                      │
-                                        │  Room: demo-room    │
+                                       │  Room: demo-room     │
 ┌──────────────┐   WHIP (HTTP + SDP)   │                      │
 │ OBS Studio   │ ────────────────────▶ │                      │
 └──────────────┘                       └──────────┬───────────┘
@@ -88,9 +88,9 @@ Open both in separate tabs (or separate browsers) to see the whole loop.
 **Linux note:** WHIP output is not available in the Ubuntu 24.04 PPA build of OBS. Use the [Flatpak build](https://flathub.org/apps/com.obsproject.Studio) instead if `WHIP` doesn't show up under Service.
 
 **Shortcut:** [`obs/openvidu-whip-webcam.json`](obs/) is a ready-made scene collection — a webcam on
-a 720p canvas, your default mic, and a virtual-background filter. Import it (**Scene Collection →
-Import**), keep the scene for your OS, and skip to step 1 below. See [`obs/README.md`](obs/README.md)
-for the virtual-background plugin and the output settings worth checking.
+a 720p canvas, your default mic, and a chroma-key filter for a green screen. Import it (**Scene
+Collection → Import**), keep the scene for your OS, and skip to step 1 below. See
+[`obs/README.md`](obs/README.md) for tuning the key and the output settings worth checking.
 
 WHIP has been a built-in OBS output since version 30. You need a WHIP URL and a bearer token — the app generates both for you:
 
