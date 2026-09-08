@@ -88,9 +88,9 @@ Open both in separate tabs (or separate browsers) to see the whole loop.
 **Linux note:** WHIP output is not available in the Ubuntu 24.04 PPA build of OBS. Use the [Flatpak build](https://flathub.org/apps/com.obsproject.Studio) instead if `WHIP` doesn't show up under Service.
 
 **Shortcut:** [`obs/openvidu-whip-webcam.json`](obs/) is a ready-made scene collection — a webcam on
-a 720p canvas, your default mic, and a chroma-key filter for a green screen. Import it (**Scene
-Collection → Import**), keep the scene for your OS, and skip to step 1 below. See
-[`obs/README.md`](obs/README.md) for tuning the key and the output settings worth checking.
+a 720p canvas, a backdrop behind it, and your default mic. Import it (**Scene Collection →
+Import**), keep the scene for your OS, and skip to step 1 below. See
+[`obs/README.md`](obs/README.md) for background filters and the output settings worth checking.
 
 WHIP has been a built-in OBS output since version 30. You need a WHIP URL and a bearer token — the app generates both for you:
 
